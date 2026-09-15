@@ -85,6 +85,8 @@ typedef struct{
 #define GPIOFEN				(1U << 5)
 #define GPIOGEN				(1U << 6)
 #define GPIOHEN				(1U << 7)
+#define DMA1_EN  			(1UL << 21)
+#define DMA2_EN  			(1UL << 22)
 
 #define SYSCFG_EN  			(1U << 14)
 
@@ -215,5 +217,7 @@ void __RCC_USART2_CLK_ENABLE(void);
 void __RCC_CAN1_CLK_ENABLE(void);
 void __RCC_CAN2_CLK_ENABLE(void);
 void __RCC_SYSCFG_CLK_ENABLE(void);
+void __RCC_DMA1_CLK_ENABLE(void);
+void __RCC_DMA2_CLK_ENABLE(void);
 
 #endif /* RCC_H_ */

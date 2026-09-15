@@ -26,6 +26,11 @@ typedef enum{
 }Status_TypeDef;
 
 typedef enum{
+	ARM_UNLOCKED			= 0x00U,
+	ARM_LOCKED			= 0x01U
+}LOCK_TypeDef;
+
+typedef enum{
 	ENABLE = 1,
 	DISABLE = !ENABLE
 }State_TypeDef;
@@ -51,9 +56,9 @@ typedef enum{
 #include "syscfg.h"
 #include "exti.h"
 #include "gpio.h"
-#include "debounce.h"
 #include "uart.h"
 #include "can.h"
+#include "dma.h"
 #include "msp.h"
 
 #endif /* MAIN_H_ */

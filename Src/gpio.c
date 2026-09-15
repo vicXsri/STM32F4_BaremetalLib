@@ -77,7 +77,7 @@ void GPIO_TogglePin(GPIO_Typedef* GPIOx,  uint16_t GPIO_PIN){
 }
 
 bool GPIO_ReadPin(GPIO_Typedef* GPIOx,  uint16_t GPIO_PIN){
-	return	READ_FIELD(GPIOx->IDR, 0x01U, GPIO_PIN);
+	return	READ_FIELD(GPIOx->IDR, GPIO_PIN, 0x01U);
 }
 
 bool GPIO_LockPin(GPIO_Typedef* GPIOx,  uint16_t GPIO_PIN){

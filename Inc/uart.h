@@ -19,30 +19,7 @@ typedef struct{
 	volatile unsigned int tail;
 }RingBuffer_TypeDef;
 
-typedef struct{
-	uint32_t BaudRate;
-	uint32_t WordLength;
-	uint32_t StopBits;
-	uint32_t parity;
-	uint32_t Mode;
-	uint32_t HWFlowCtl;
-	uint32_t OverSampling;
-}UART_InitTypeDef;
 
-typedef struct{
-	uint32_t SR;	// Status register
-	uint32_t DR; 	// Data register
-	uint32_t BRR; 	// Baud rate register
-	uint32_t CR1; 	// Control register 1
-	uint32_t CR2; 	// Control register 2
-	uint32_t CR3; 	// Control register 3
-	uint32_t GTPR; 	// Guard time and prescaler register
-}USART_TypeDef;
-
-typedef struct {
-	USART_TypeDef		*Instance; /*Chooses Which UART*/
-	UART_InitTypeDef	 Init;
-}UART_HandleTypeDef;
 
 
 #define USART_WL_8B					(0x00U)
@@ -86,6 +63,7 @@ Status_TypeDef USART_Init(UART_HandleTypeDef* huart);
 void USART_MspInit(UART_HandleTypeDef* huart);
 uint16_t USART_Compute_Baud(uint32_t pclk, uint32_t baudrate);
 void debug(int ch);
+void uart_tx(const char* data);
 
 /*Ring Buffer Setup*/
 
@@ -98,12 +76,19 @@ void UART_Recieve(void);
 /*Transmit data from UART*/
 void UART_Transmit(int c);
 
-void UART_Transmit(int c);
 
 void UART_isr (UART_HandleTypeDef *huart);
 
 
 void __UART_ENABLE_IT_EIE(UART_HandleTypeDef* huart);
 void __UART_ENABLE_IT_RXNE(UART_HandleTypeDef* huart);
+
+Status_TypeDef UART_Transmit_DMA(UART_HandleTypeDef* huart, const uint8_t* pData, uint16_t size);
+
+void UART_DMATransmitCplt(DMA_HandleTypeDef* hdma);
+void UART_DMATransmitHalfCplt(DMA_HandleTypeDef* hdma);
+
+void UART_TxCpltCallback(UART_HandleTypeDef *huart);
+void UART_TxHalfCpltCallback(UART_HandleTypeDef *huart);
 
 #endif /* UART_H_ */

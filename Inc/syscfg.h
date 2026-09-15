@@ -23,4 +23,5 @@ typedef struct{
 #define SYSCFG				((SYSCFG_TypeDef*) SYSCFG_BASE)
 
 void pc13_exti_interrupt(uint32_t IRQn);
+void pc0_exti_interrupt(uint32_t IRQn);
 #endif /* SYSCFG_H_ */

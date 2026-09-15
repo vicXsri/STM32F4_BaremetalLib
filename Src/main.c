@@ -1,23 +1,27 @@
 /**
  ******************************************************************************
  * @file           : main.c
- * @author         : Srivisweswara
+ * @author         : Srivisweswara Mohan Santhi
  * @brief          : Main program body
  ******************************************************************************
  **/
 
 #include "main.h"
+#include "debounce.h"
+
 
 UART_HandleTypeDef huart2;
 CAN_HandleTypeDef hcan1;
+DMA_HandleTypeDef hdma_usart2_tx;
 
-Debounce_Handel_t user_btn;
+Debounce_Handel_t user_btn, user_btn_pc0, user_btn_pc13;
 
 void SystemSetup();
 void SystemClock_Config(void);
 void M_GPIO_Init(void);
 void M_USART2_UART_Init(void);
 void Error_Handler(void);
+void M_DMA1_Init(void);
 void M_CAN1_Init(void);
 
 CAN_TxTypeDef TxHeader;
@@ -30,7 +34,11 @@ uint32_t mailbox;
 uint8_t txData[8];
 uint8_t rxData[8];
 
+char buff[50];
+
 uint32_t canBaudRate = 0;
+
+uint8_t itr=0;
 
 void filter_can(void){
 
@@ -45,14 +53,14 @@ void filter_can(void){
 	canFilter.FilterMaskIdLow = 0x0000;
 	canFilter.SlaveStartFilterBank = 14;
 
-		if(CAN_ConfigFilter(&hcan1, &canFilter) != VIC_OK){
-			printf("Filter Error\r\n\r\n");
-			Error_Handler();
-		}else{
-			printf("Filter Success\r\n\r\n");
-		}
+	if(CAN_ConfigFilter(&hcan1, &canFilter) != VIC_OK){
+		printf("Filter Error\r\n\r\n");
+		Error_Handler();
+	}else{
+		printf("Filter Success\r\n\r\n");
+	}
 }
-uint8_t itr=0;
+
 void transmit_can(void){
 	TxHeader.IDE = CAN_EXT_ID;
 	TxHeader.ExtId = 0xFFFF;
@@ -90,55 +98,32 @@ void recieve_can(void){
 	}
 }
 
-int main(void)
-{
+void UART_TxCpltCallback(UART_HandleTypeDef *huart){
+	if(huart->Instance == USART2){
+		UART_Transmit_DMA(&huart2, (uint8_t*)buff, (uint16_t)strlen(buff));
+	}
+}
+
+int main(void){
 
  	SystemSetup();
+
  	SystemClock_Config();
 
  	FPU_Init();
 
  	M_GPIO_Init();
 
- 	M_USART2_UART_Init();
+	M_DMA1_Init();
+	M_USART2_UART_Init();
 
- 	/* Init CAN ! */
- 	M_CAN1_Init();
-//	printf("CAN Init Done\r\n\r\n");
+	sprintf(buff, "Hello from uart DMA !!!!\r\n");
+	UART_Transmit_DMA(&huart2, (uint8_t*)buff, (uint16_t)strlen(buff));
 
-//	if(CAN_Compute_Baud(&hcan1, &canBaudRate) != VIC_OK){
-//		printf("CAN_BaudRate Not Updated CHeck The State");
-//		Error_Handler();
-//	}
-//	else{
-//		printf("can baurate ->  %lu bps\r\n\r\n\r\n", canBaudRate);
-//	}
-
-	/* Setup Filter !*/
-	filter_can();
-
-	/* Start CAN !*/
-	if(CAN_Start(&hcan1) != VIC_OK){
-		printf("CAN Start Failed\r\n\r\n");
-		Error_Handler();
-	}else{
-		printf("CAN Start Success\r\n\r\n");
-	}
-
-
-	while(1){
-		/* Transmit CAN !*/
-
-		transmit_can();
-
-		GPIO_TogglePin(GPIOA, GPIO_PIN_5);
-
-//		(GPIO_ReadPin(GPIOC, GPIO_PIN_13) == 0) ?
-//		GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_SET):
-//		GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_RESET);
-//		delay(1000);
-//		printf("Hello World !!\r\n");
-		delay(1000);
+ 	while(1){
+// 		printf("hellooo worldd !!!\r\n");
+// 		uart_tx("hellooo worldd !!!\r\n");
+ 		delay(1000);
 	}
  }
 
@@ -148,8 +133,8 @@ void SystemSetup(){
 }
 
 void SystemClock_Config(void){
-	RCC_OscInitTypeDef RCC_OscInitStruct ={0};
-	RCC_ClkInitTypeDef RCC_ClkInitStruct ={0};
+	RCC_OscInitTypeDef RCC_OscInitStruct = {0};
+	RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
 
 	/*Enable PWR in APB1 Enable Register*/
 	__RCC_PWR_CLK_ENABLE();
@@ -206,9 +191,17 @@ void M_GPIO_Init(void){
 	GPIO_InitStruct.Mode      = GPIO_INPUT;
 	GPIO_InitStruct.Pull      = GPIO_NOPULL;
 	GPIO_Init(GPIOC, &GPIO_InitStruct);
-// 	Debounce_Init(&user_btn, 100);
 
-//	pc13_exti_interrupt(EXTI15_10_IRQ);
+	GPIO_InitStruct.Pin       = GPIO_PIN_0;
+	GPIO_InitStruct.Mode      = GPIO_INPUT;
+	GPIO_InitStruct.Pull      = GPIO_PULLUP;
+	GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+ 	pc13_exti_interrupt(EXTI15_10_IRQ);
+
+ 	Debounce_Init(&user_btn_pc13, GPIOC, GPIO_PIN_13, 20, true);
+
+//	pc0_exti_interrupt(0x06U); // EXTIO0
 }
 
 void M_USART2_UART_Init(void){
@@ -225,6 +218,13 @@ void M_USART2_UART_Init(void){
 	if(USART_Init(&huart2) != VIC_OK){
 		Error_Handler();
 	}
+}
+void M_DMA1_Init(void){
+
+	__RCC_DMA1_CLK_ENABLE();
+
+	NVIC_Enable(DMA1_Stream6_IRQn); // TX
+
 }
 
 void M_CAN1_Init(void){

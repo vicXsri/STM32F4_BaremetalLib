@@ -262,3 +262,10 @@ void __RCC_CAN2_CLK_ENABLE(void){
 void __RCC_SYSCFG_CLK_ENABLE(void){
 	RCC->APB2ENR |= SYSCFG_EN;
 }
+
+void __RCC_DMA1_CLK_ENABLE(void){
+	RCC->AHB1ENR |= DMA1_EN;
+}
+void __RCC_DMA2_CLK_ENABLE(void){
+	RCC->AHB1ENR |= DMA2_EN;
+}

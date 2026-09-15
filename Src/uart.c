@@ -102,6 +102,13 @@ void debug(int ch){
 	while(!(USART2->SR & (1U << 7)));
 	USART2->DR = (ch & 0xFF);
 }
+
+void uart_tx(const char* data){
+	while(*data){
+		debug(*data++);
+	}
+}
+
 /********************************************************************************************/
 
 
@@ -113,3 +120,62 @@ void __UART_ENABLE_IT_RXNE(UART_HandleTypeDef* huart){
 	huart->Instance->CR1 |= USART_RXNE_EN;
 }
 /********************************************************************************************/
+
+Status_TypeDef UART_Transmit_DMA(UART_HandleTypeDef* huart, const uint8_t* pData, uint16_t size){
+
+	if((huart == NULL) || (pData == NULL) || (size == 0U) ||
+		(huart->hdmatx == NULL)){
+		return VIC_ERROR;
+	}
+
+	huart->pTxBuffptr = pData;
+	huart->TxXferSize = size;
+	huart->TxXferCount = size;
+
+	huart->hdmatx->XferCpltCallback = UART_DMATransmitCplt;
+	huart->hdmatx->XferHalfCpltCallback = UART_DMATransmitHalfCplt;
+//		huart->hdmatx->XferErrorCallback = ;
+	huart->hdmatx->XferAbortCallback = NULL;
+
+	if(DMA_START_IT(huart->hdmatx, (uint32_t)pData,
+			(uint32_t)&huart->Instance->DR, size) != VIC_OK){
+		return VIC_ERROR;
+	}
+
+	huart->Instance->SR &= ~(0x01UL << 6U);
+
+	huart->Instance->CR3 |= (0x01UL << 7U);
+
+	return VIC_OK;
+
+}
+
+void UART_DMATransmitCplt(DMA_HandleTypeDef* hdma){
+	UART_HandleTypeDef *huart = (UART_HandleTypeDef*) (hdma->Parent);
+
+	/* Normal Mode */
+	if(hdma->Init.Mode != DMA_CIRCULAR){
+		huart->TxXferCount = 0U;
+
+		huart->Instance->CR3 &= ~(0x01UL << 7U);
+		huart->Instance->CR1 |= (0x01UL << 6U);
+	}
+
+	/* Circular Mode */
+	else{
+		UART_TxCpltCallback(huart);
+	}
+}
+
+void UART_DMATransmitHalfCplt(DMA_HandleTypeDef* hdma){
+	UART_HandleTypeDef *huart = (UART_HandleTypeDef*) (hdma->Parent);
+	UART_TxHalfCpltCallback(huart);
+}
+
+__attribute__((weak)) void UART_TxCpltCallback(UART_HandleTypeDef *huart){
+
+}
+
+__attribute__((weak)) void UART_TxHalfCpltCallback(UART_HandleTypeDef *huart){
+
+}

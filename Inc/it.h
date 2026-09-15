@@ -10,5 +10,6 @@
 
 #include "main.h"
 
+void DMA1_Stream6_IRQHandler(void);
 
 #endif /* IT_H_ */
