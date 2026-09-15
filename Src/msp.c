@@ -57,7 +57,11 @@ void USART_MspInit(UART_HandleTypeDef* huart){
 		  hdma_usart2_tx.Init.MemDataAlignment = DMA_MEM_DATA_SIZE_BYTE;
 		  hdma_usart2_tx.Init.Mode = DMA_NORMAL;
 		  hdma_usart2_tx.Init.Priority = DMA_PRIORITY_LOW;
-		  hdma_usart2_tx.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
+		  hdma_usart2_tx.Init.FIFOMode = DMA_FIFOMODE_ENABLE;
+		  hdma_usart2_tx.Init.FIFOThreshold = DMA_FIFO_THRESHOLD_FULL;
+		  hdma_usart2_tx.Init.PeriphBurst = DMA_PBURST_SINGLE;
+		  hdma_usart2_tx.Init.MemBurst = DMA_MBURST_SINGLE;
+
 
 		  if(DMA1_Init(&hdma_usart2_tx) != VIC_OK){
 //			  Error_Handler();
