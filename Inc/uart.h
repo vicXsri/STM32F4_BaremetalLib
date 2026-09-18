@@ -42,6 +42,12 @@ typedef struct{
 #define USART_TXNE_EN				(1U << 0x07U)
 #define USART_EIE_EN				(1U << 0x00U)
 
+#define USART_SR_PE					(1U << 0x00U)
+#define USART_SR_FE					(1U << 0x01U)
+#define USART_SR_NF					(1U << 0x02U)
+#define USART_SR_ORE				(1U << 0x03U)
+#define USART_SR_RXNE				(1U << 0x05U)
+
 #define USART_EN					(1U << 0x0DU)
 
 #define USART_HWCONTROL_NONE		(0x00U)
@@ -62,9 +68,13 @@ typedef struct{
 Status_TypeDef USART_Init(UART_HandleTypeDef* huart);
 void USART_MspInit(UART_HandleTypeDef* huart);
 uint16_t USART_Compute_Baud(uint32_t pclk, uint32_t baudrate);
-void debug(int ch);
-void uart_tx(const char* data);
+void debug_u1(int ch);
+void debug_u2(int ch);
 
+void __debug(UART_HandleTypeDef* huart, int ch);
+void uart_tx(UART_HandleTypeDef* huart, const char* data);
+void debug_tx(const char* data);
+void cmd_tx(const char* data);
 /*Ring Buffer Setup*/
 
 /*Initialize the Ring Buffer*/
@@ -74,8 +84,7 @@ void RingBuffer_Init(void);
 void UART_Recieve(void);
 
 /*Transmit data from UART*/
-void UART_Transmit(int c);
-
+Status_TypeDef UART_Transmit(UART_HandleTypeDef *huart, const uint8_t* pdata, uint16_t size, uint32_t timeout);
 
 void UART_isr (UART_HandleTypeDef *huart);
 
@@ -83,6 +92,7 @@ void UART_isr (UART_HandleTypeDef *huart);
 void __UART_ENABLE_IT_EIE(UART_HandleTypeDef* huart);
 void __UART_ENABLE_IT_RXNE(UART_HandleTypeDef* huart);
 
+Status_TypeDef UART_Receive(UART_HandleTypeDef *huart, uint8_t* pdata, uint16_t size, uint32_t timeout);
 Status_TypeDef UART_Transmit_DMA(UART_HandleTypeDef* huart, const uint8_t* pData, uint16_t size);
 
 void UART_DMATransmitCplt(DMA_HandleTypeDef* hdma);

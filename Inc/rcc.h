@@ -87,6 +87,7 @@ typedef struct{
 #define GPIOHEN				(1U << 7)
 #define DMA1_EN  			(1UL << 21)
 #define DMA2_EN  			(1UL << 22)
+#define CRC_EN  			(1UL << 12)
 
 #define SYSCFG_EN  			(1U << 14)
 
@@ -189,6 +190,7 @@ typedef struct{
 
 #define APB1_PWR_EN			  (0x1CU)
 #define APB1_USART2_EN		  (0x11U)
+#define APB1_USART3_EN		  (0x12U)
 #define APB1_CAN1_EN		  (0x19U)
 #define APB1_CAN2_EN		  (0x1AU)
 
@@ -214,10 +216,12 @@ void __RCC_GPIOH_CLK_ENABLE(void);
 
 void __RCC_PWR_CLK_ENABLE(void);
 void __RCC_USART2_CLK_ENABLE(void);
+void __RCC_USART3_CLK_ENABLE(void);
 void __RCC_CAN1_CLK_ENABLE(void);
 void __RCC_CAN2_CLK_ENABLE(void);
 void __RCC_SYSCFG_CLK_ENABLE(void);
 void __RCC_DMA1_CLK_ENABLE(void);
 void __RCC_DMA2_CLK_ENABLE(void);
+void __RCC_CRC_CLK_ENABLE(void);
 
 #endif /* RCC_H_ */

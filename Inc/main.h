@@ -59,6 +59,9 @@ typedef enum{
 #include "uart.h"
 #include "can.h"
 #include "dma.h"
+#include "crc.h"
+#include "bootloader.h"
+#include "uid.h"
 #include "msp.h"
 
 #endif /* MAIN_H_ */

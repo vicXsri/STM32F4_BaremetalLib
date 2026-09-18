@@ -85,6 +85,7 @@ typedef struct{
 
 #define EXTI15_10_IRQ			(0x28U)
 #define USART2_IRQ				(0x26U)
+#define USART3_IRQ				(0x27U)
 
 
 #define DMA1_Stream0_IRQn				(11U)

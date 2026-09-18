@@ -10,7 +10,7 @@
 #include "debounce.h"
 
 
-UART_HandleTypeDef huart2;
+UART_HandleTypeDef huart2, huart3;
 CAN_HandleTypeDef hcan1;
 DMA_HandleTypeDef hdma_usart2_tx;
 
@@ -20,9 +20,13 @@ void SystemSetup();
 void SystemClock_Config(void);
 void M_GPIO_Init(void);
 void M_USART2_UART_Init(void);
+void M_USART3_UART_Init(void);
 void Error_Handler(void);
 void M_DMA1_Init(void);
 void M_CAN1_Init(void);
+void M_CRC_Init(void);
+
+
 
 CAN_TxTypeDef TxHeader;
 CAN_RxTypeDef RxHeader;
@@ -34,11 +38,11 @@ uint32_t mailbox;
 uint8_t txData[8];
 uint8_t rxData[8];
 
-char buff[50];
 
 uint32_t canBaudRate = 0;
 
 uint8_t itr=0;
+
 
 void filter_can(void){
 
@@ -84,7 +88,6 @@ void transmit_can(void){
 		while (!(CAN1->TSR & (1U << 0U)));
 		CAN1->TSR |= 1U << 0U;
 	}
-
 }
 
 void recieve_can(void){
@@ -98,31 +101,42 @@ void recieve_can(void){
 	}
 }
 
-void UART_TxCpltCallback(UART_HandleTypeDef *huart){
-	if(huart->Instance == USART2){
-		UART_Transmit_DMA(&huart2, (uint8_t*)buff, (uint16_t)strlen(buff));
-	}
-}
+//void UART_TxCpltCallback(UART_HandleTypeDef *huart){
+//	if(huart->Instance == USART2){
+//		UART_Transmit_DMA(&huart2, (uint8_t*)buff, (uint16_t)strlen(buff));
+//	}
+//}
 
 int main(void){
 
  	SystemSetup();
 
- 	SystemClock_Config();
+// 	SystemClock_Config();
 
  	FPU_Init();
 
  	M_GPIO_Init();
 
 	M_DMA1_Init();
-	M_USART2_UART_Init();
 
-	sprintf(buff, "Hello from uart DMA !!!!\r\n");
-	UART_Transmit_DMA(&huart2, (uint8_t*)buff, (uint16_t)strlen(buff));
+	M_USART2_UART_Init();
+	M_USART3_UART_Init();
+	M_CRC_Init();
+
+	if(!GPIO_ReadPin(GPIOC, GPIO_PIN_13)){
+ 		debug_tx("BL_DEBUG_MSG: Button is pressed.. going to BL mode\r\n");
+ 		bootloader_uart_read_data();
+	}else{
+ 		debug_tx("BL_DEBUG_MSG: Button is not pressed.. executing user mode\r\n");
+ 		bootloader_jump_to_user_app();
+	}
 
  	while(1){
 // 		printf("hellooo worldd !!!\r\n");
-// 		uart_tx("hellooo worldd !!!\r\n");
+// 		uart_tx(&huart3,"hellooo worldd !!!\r\n");
+ 		cmd_tx("hellooo worldd from UART2 !!!\r\n");
+ 		GPIO_TogglePin(GPIOA, GPIO_PIN_5);
+
  		delay(1000);
 	}
  }
@@ -219,6 +233,22 @@ void M_USART2_UART_Init(void){
 		Error_Handler();
 	}
 }
+
+void M_USART3_UART_Init(void){
+
+	huart3.Instance = USART3;
+	huart3.Init.BaudRate = 115200;
+	huart3.Init.WordLength = USART_WL_8B;
+	huart3.Init.StopBits = USART_STOP_BIT1;
+	huart3.Init.parity = USART_PARITY_NONE;
+	huart3.Init.Mode = USART_MODE_TX_RX;
+	huart3.Init.HWFlowCtl = USART_HWCONTROL_NONE;
+	huart3.Init.OverSampling = USART_OverSampling_16;
+
+	if(USART_Init(&huart3) != VIC_OK){
+		Error_Handler();
+	}
+}
 void M_DMA1_Init(void){
 
 	__RCC_DMA1_CLK_ENABLE();
@@ -246,6 +276,10 @@ void M_CAN1_Init(void){
 		Error_Handler();
 	}
 
+}
+
+void M_CRC_Init(void){
+	CRC_Init(CRC);
 }
 
 void Error_Handler(void){

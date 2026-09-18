@@ -251,6 +251,9 @@ void __RCC_PWR_CLK_ENABLE(void){
 void __RCC_USART2_CLK_ENABLE(void){
 	RCC->APB1ENR |= (1U << APB1_USART2_EN);
 }
+void __RCC_USART3_CLK_ENABLE(void){
+	RCC->APB1ENR |= (1U << APB1_USART3_EN);
+}
 
 void __RCC_CAN1_CLK_ENABLE(void){
 	RCC->APB1ENR |= (1U << APB1_CAN1_EN);
@@ -268,4 +271,8 @@ void __RCC_DMA1_CLK_ENABLE(void){
 }
 void __RCC_DMA2_CLK_ENABLE(void){
 	RCC->AHB1ENR |= DMA2_EN;
+}
+
+void __RCC_CRC_CLK_ENABLE(void){
+	RCC->AHB1ENR |= CRC_EN;
 }

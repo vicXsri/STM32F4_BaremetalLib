@@ -13,4 +13,6 @@
 //void USART_MspInit(UART_HandleTypeDef* huart);
 //void CAN1_MspInit(CAN_HandleTypeDef* hcan);
 
+void CRC_MspInit(CRC_TypeDef* hcrc);
+
 #endif /* MSP_H_ */

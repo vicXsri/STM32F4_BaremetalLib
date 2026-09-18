@@ -13,6 +13,9 @@ extern UART_HandleTypeDef huart2;
 #define uart &huart2
 #define TIMEOUT_DEF	500
 
+#define BL_DEBUG_MSG_EN
+#define BL_CMD_MSG_EN
+
 
 uint16_t timeout;
 
@@ -83,7 +86,6 @@ Status_TypeDef USART_Init(UART_HandleTypeDef* huart){
     /*Enable the usart Instance*/
     huart->Instance->CR1 |= USART_EN;
 
-    NVIC_Enable(USART2_IRQ);
     return VIC_OK;
 }
 
@@ -95,18 +97,50 @@ uint16_t USART_Compute_Baud(uint32_t pclk, uint32_t baudrate){
 
 /********************************************************************************************/
 int __io_putchar(int ch){
-	debug(ch);
+	debug_u1(ch);
 	return ch;
 }
-void debug(int ch){
+void debug_u1(int ch){
 	while(!(USART2->SR & (1U << 7)));
 	USART2->DR = (ch & 0xFF);
 }
+void debug_u2(int ch){
+	while(!(USART3->SR & (1U << 7)));
+	USART3->DR = (ch & 0xFF);
+}
+void __debug(UART_HandleTypeDef* huart, int ch){
+	while(!(huart->Instance->SR & (1U << 7)));
+	huart->Instance->DR = (ch & 0xFF);
+}
 
-void uart_tx(const char* data){
+void uart_tx(UART_HandleTypeDef* huart, const char* data){
+
+#ifdef BL_DEBUG_MSG_EN
 	while(*data){
-		debug(*data++);
+		__debug(huart, *data++);
 	}
+#endif
+
+}
+
+void cmd_tx(const char* data){
+
+#ifdef BL_CMD_MSG_EN
+	while(*data){
+		debug_u1(*data++);
+	}
+#endif
+
+}
+
+void debug_tx(const char* data){
+
+#ifdef BL_DEBUG_MSG_EN
+	while(*data){
+		debug_u2(*data++);
+	}
+#endif
+
 }
 
 /********************************************************************************************/
@@ -177,5 +211,76 @@ __attribute__((weak)) void UART_TxCpltCallback(UART_HandleTypeDef *huart){
 }
 
 __attribute__((weak)) void UART_TxHalfCpltCallback(UART_HandleTypeDef *huart){
+
+}
+
+
+Status_TypeDef UART_Receive(UART_HandleTypeDef *huart, uint8_t* pdata, uint16_t size, uint32_t timeout){
+
+	uint32_t start_tick;
+	volatile uint32_t status = 0, data = 0;
+	if((pdata == NULL) || (size == 0U)){
+		return VIC_ERROR;
+	}
+
+	start_tick = Get_Tick();
+
+	for(uint16_t i = 0; i < size; i++){
+		while((huart->Instance->SR & USART_SR_RXNE) == 0){
+
+			if((huart->Instance->SR & (USART_SR_PE | USART_SR_FE | USART_SR_NF | USART_SR_ORE)) != 0U){
+				status = huart->Instance->SR;
+				data = huart->Instance->DR;
+
+				(void)status;
+				(void)data;
+
+				return VIC_ERROR;
+
+			}
+
+			if((Get_Tick() - start_tick) >= timeout){
+				return VIC_TIMEOUT;
+			}
+		}
+
+		pdata[i] = (uint8_t)(huart->Instance->DR & 0xFFU);
+
+	}
+
+	return VIC_OK;
+
+}
+
+Status_TypeDef UART_Transmit(UART_HandleTypeDef *huart, const uint8_t* pdata, uint16_t size, uint32_t timeout){
+
+	uint32_t startTick;
+
+	if(pdata == NULL || size == 0U){
+		return VIC_ERROR;
+	}
+
+	startTick = Get_Tick();
+
+	while(size > 0U){
+		while(!(huart->Instance->SR & (1U << 7))){
+			if((Get_Tick() - startTick) >=timeout){
+				return VIC_TIMEOUT;
+			}
+		}
+
+		huart->Instance->DR = (uint8_t)(*pdata);
+
+		pdata++;
+		size--;
+	}
+
+	while(!(huart->Instance->SR & (1U << 6))){
+		if((Get_Tick() - startTick) >=timeout){
+			return VIC_TIMEOUT;
+		}
+	}
+
+	return VIC_OK;
 
 }

@@ -65,6 +65,11 @@
 #define DMA2_Stream6_Base		(DMA2_BASE + 0x0A0UL)
 #define DMA2_Stream7_Base		(DMA2_BASE + 0x0B8UL)
 
+#define CRC_Base				(AHB1_BASE + 0x3000UL)
+#define UID_Base				 0x1FFF7A10
+
+#define FLASH_SECTOR2_BASE_ADD	0x08008000UL
+
 
 #include "main.h"
 
@@ -175,5 +180,16 @@ typedef struct {
 	DMA_HandleTypeDef	 *hdmarx;
 
 }UART_HandleTypeDef;
+
+typedef struct{
+	__IO uint32_t DR;
+	__IO uint32_t IDR;
+	__IO uint32_t CR;
+}CRC_TypeDef;
+
+static inline void __set_MSP(uint32_t topOfMainStack)
+{
+  __asm volatile ("MSR msp, %0" : : "r" (topOfMainStack) : );
+}
 
 #endif /* STM32_F446XX_H_ */

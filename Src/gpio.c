@@ -18,7 +18,7 @@ void GPIO_Init(GPIO_Typedef* GPIOx, GPIO_InitTypeDef* GPIO_Init){
 	if((GPIO_Init->Mode == GPIO_OUTPUT) || (GPIO_Init->Mode == GPIO_ANALOG)){
 		/*Set the speed of the gpio pin*/
 		CLEAR_FIELD(GPIOx->OSPEEDR, 0x03U, (GPIO_Init->Pin * 0x02));
-		SET_FIELD(GPIOx->OSPEEDR, GPIO_Init->Mode, (GPIO_Init->Pin * 0x02));
+		SET_FIELD(GPIOx->OSPEEDR, GPIO_Init->Speed, (GPIO_Init->Pin * 0x02));
 
 		/*configure the output mode of gpio pin*/
 		(GPIO_Init->OType)?
